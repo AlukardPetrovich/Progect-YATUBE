@@ -49,7 +49,6 @@
           {% thumbnail post.image "960x339" crop="center" upscale=True as im %}
            <img class="card-img my-2" src="{{ im.url }}">
           {% endthumbnail %}
-        
           {% if user.is_authenticated %}
            <div class="card my-4">
             <h5 class="card-header">Добавить комментарий:</h5>
@@ -64,7 +63,6 @@
             </div>
      </div>
 {% endif %}
-
 {% for comment in comments %}
   <div class="media mb-4">
     <div class="media-body">
@@ -74,17 +72,12 @@
         </a>
       </h5>
         <p>
-         {{ comment.text }}
+         {{ comment.text|linebreaksbr }}
         </p>
       </div>
     </div>
-{% endfor %} 
-
-
-
-
+{% endfor %}
         </article>
-        
       </div> 
     </main>
     {% endblock %}

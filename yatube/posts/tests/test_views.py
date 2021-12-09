@@ -21,6 +21,11 @@ class TaskPagesTests(TestCase):
         super().setUpClass()
 
         cls.user = User.objects.create_user(username='TestUser')
+        cls.authorized_client = Client()
+        cls.authorized_client.force_login(cls.user)
+        cls.user_2 = User.objects.create_user(username='TestUser2')
+        cls.authorized_client_2 = Client()
+        cls.authorized_client_2.force_login(cls.user_2)
         cls.pic = (
             b'\x47\x49\x46\x38\x39\x61\x02\x00'
             b'\x01\x00\x80\x00\x00\x00\x00\x00'
@@ -52,10 +57,6 @@ class TaskPagesTests(TestCase):
     def tearDownClass(cls):
         super().tearDownClass()
         shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
-
-    def setUp(self):
-        self.authorized_client = Client()
-        self.authorized_client.force_login(self.user)
 
     def context_parse(self, url, kwargs):
         response = self.authorized_client.get(reverse(url, kwargs=kwargs))
@@ -229,22 +230,29 @@ class TaskPagesTests(TestCase):
         self.assertNotIn(first_object, response.context['page_obj'])
 
     def test_index_cache(self):
+        response_before = self.authorized_client.get(reverse('posts:index'))
         test_cache_post = Post.objects.create(
             text='test cache post',
             author=User.objects.get(username='TestUser'))
         response = self.authorized_client.get(reverse('posts:index'))
+        self.assertEqual(response_before.content, response.content)
         self.assertNotContains(response, test_cache_post)
         cache.clear()
         response = self.authorized_client.get(reverse('posts:index'))
         self.assertContains(response, test_cache_post)
 
-    def test_follow_unfollow_authorized(self):
-        self.user_2 = User.objects.create_user(username='TestUser2')
-        self.authorized_client_2 = Client()
-        self.authorized_client_2.force_login(self.user_2)
+    def test_follow_authorized(self):
         response = self.authorized_client_2.get(reverse('posts:follow_index'))
         count = len(response.context['page_obj'])
         self.assertEqual(count, 0)
+        self.authorized_client_2.get(reverse(
+            'posts:profile_follow', kwargs={'username': 'TestUser'})
+        )
+        response = self.authorized_client_2.get(reverse('posts:follow_index'))
+        count = len(response.context['page_obj'])
+        self.assertNotEqual(count, 0)
+
+    def test_unfollow_authorized(self):
         self.authorized_client_2.get(reverse(
             'posts:profile_follow', kwargs={'username': 'TestUser'})
         )
@@ -259,9 +267,6 @@ class TaskPagesTests(TestCase):
         self.assertEqual(count, 0)
 
     def test_new_post_is_exist_on_follow_index(self):
-        self.user_2 = User.objects.create_user(username='TestUser2')
-        self.authorized_client_2 = Client()
-        self.authorized_client_2.force_login(self.user_2)
         self.authorized_client_2.get(reverse(
             'posts:profile_follow', kwargs={'username': 'TestUser'})
         )
@@ -274,3 +279,14 @@ class TaskPagesTests(TestCase):
         context_part = response.context['page_obj'][0]
         post_text = context_part.text
         self.assertEqual(post_text, 'test follow post')
+
+    def test_new_post_not_exist_on_follow_index_if_not_follow(self):
+        response = self.authorized_client_2.get(reverse('posts:follow_index'))
+        count = len(response.context['page_obj'])
+        Post.objects.create(
+            text='test follow post',
+            author=User.objects.get(username='TestUser')
+        )
+        response = self.authorized_client_2.get(reverse('posts:follow_index'))
+        count_after = len(response.context['page_obj'])
+        self.assertEqual(count, count_after)
