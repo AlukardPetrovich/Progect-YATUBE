@@ -5,7 +5,7 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django import forms
 from django.conf import settings
-from posts.models import Post, Group
+from posts.models import Follow, Post, Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.cache import cache
 
@@ -242,35 +242,29 @@ class TaskPagesTests(TestCase):
         self.assertContains(response, test_cache_post)
 
     def test_follow_authorized(self):
-        response = self.authorized_client_2.get(reverse('posts:follow_index'))
-        count = len(response.context['page_obj'])
-        self.assertEqual(count, 0)
+        follow_before = Follow.objects.all().count()
         self.authorized_client_2.get(reverse(
             'posts:profile_follow', kwargs={'username': 'TestUser'})
         )
-        response = self.authorized_client_2.get(reverse('posts:follow_index'))
-        count = len(response.context['page_obj'])
-        self.assertNotEqual(count, 0)
+        follow_after = Follow.objects.all().count()
+        self.assertEqual(follow_after, follow_before + 1)
 
     def test_unfollow_authorized(self):
         self.authorized_client_2.get(reverse(
             'posts:profile_follow', kwargs={'username': 'TestUser'})
         )
-        response = self.authorized_client_2.get(reverse('posts:follow_index'))
-        count = len(response.context['page_obj'])
-        self.assertNotEqual(count, 0)
+        follow_before = Follow.objects.all().count()
         self.authorized_client_2.get(reverse(
             'posts:profile_unfollow', kwargs={'username': 'TestUser'})
         )
-        response = self.authorized_client_2.get(reverse('posts:follow_index'))
-        count = len(response.context['page_obj'])
-        self.assertEqual(count, 0)
+        follow_after = Follow.objects.all().count()
+        self.assertEqual(follow_after, follow_before - 1)
 
     def test_new_post_is_exist_on_follow_index(self):
-        self.authorized_client_2.get(reverse(
-            'posts:profile_follow', kwargs={'username': 'TestUser'})
+        Follow.objects.create(
+            user=User.objects.get(username='TestUser2'),
+            author=User.objects.get(username='TestUser')
         )
-
         Post.objects.create(
             text='test follow post',
             author=User.objects.get(username='TestUser')
