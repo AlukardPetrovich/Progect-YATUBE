@@ -242,16 +242,18 @@ class TaskPagesTests(TestCase):
         self.assertContains(response, test_cache_post)
 
     def test_follow_authorized(self):
-        follow_before = Follow.objects.all().count()
+        self.assertFalse(Follow.objects.filter(
+            user=self.user_2, author=self.user).exists())
         self.authorized_client_2.get(reverse(
             'posts:profile_follow', kwargs={'username': 'TestUser'})
         )
-        follow_after = Follow.objects.all().count()
-        self.assertEqual(follow_after, follow_before + 1)
+        self.assertTrue(Follow.objects.filter(
+            user=self.user_2, author=self.user).exists())
 
     def test_unfollow_authorized(self):
-        self.authorized_client_2.get(reverse(
-            'posts:profile_follow', kwargs={'username': 'TestUser'})
+        Follow.objects.create(
+            user=User.objects.get(username='TestUser2'),
+            author=User.objects.get(username='TestUser')
         )
         follow_before = Follow.objects.all().count()
         self.authorized_client_2.get(reverse(
@@ -284,3 +286,25 @@ class TaskPagesTests(TestCase):
         response = self.authorized_client_2.get(reverse('posts:follow_index'))
         count_after = len(response.context['page_obj'])
         self.assertEqual(count, count_after)
+
+    def test_doublefollow_and_selffollow(self):
+        Follow.objects.create(
+            user=User.objects.get(username='TestUser2'),
+            author=User.objects.get(username='TestUser')
+        )
+        self.authorized_client_2.get(reverse(
+            'posts:profile_follow', kwargs={'username': 'TestUser'})
+        )
+        count = Follow.objects.filter(
+            user=User.objects.get(username='TestUser2'),
+            author=User.objects.get(username='TestUser')
+        ).count()
+        self.assertEqual(count, 1)
+        self.authorized_client_2.get(reverse(
+            'posts:profile_follow', kwargs={'username': 'TestUser2'})
+        )
+        count = Follow.objects.filter(
+            user=User.objects.get(username='TestUser2'),
+            author=User.objects.get(username='TestUser2')
+        ).count()
+        self.assertEqual(count, 0)
