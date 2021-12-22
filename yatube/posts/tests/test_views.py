@@ -287,7 +287,7 @@ class TaskPagesTests(TestCase):
         count_after = len(response.context['page_obj'])
         self.assertEqual(count, count_after)
 
-    def test_doublefollow_and_selffollow(self):
+    def test_doublefollow(self):
         Follow.objects.create(
             user=User.objects.get(username='TestUser2'),
             author=User.objects.get(username='TestUser')
@@ -300,6 +300,8 @@ class TaskPagesTests(TestCase):
             author=User.objects.get(username='TestUser')
         ).count()
         self.assertEqual(count, 1)
+
+    def test_selffollow(self):
         self.authorized_client_2.get(reverse(
             'posts:profile_follow', kwargs={'username': 'TestUser2'})
         )

@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Зарегистрироваться{% endblock %}
 {% block content %}
+<main>
   <div class="row justify-content-center">
     <div class="col-md-8 p-5">
       <div class="card">
@@ -23,7 +24,6 @@
               {% endif %}
               <form method="post" action="{% url 'users:signup' %}">
               {% csrf_token %}
-              {# Выводим поля в цикле, по отдельности #}
               {% for field in form %} 
                 <div class="form-group row my-3">
                   <label for="{{ field.id_for_label }}">
@@ -32,7 +32,6 @@
                         <span class="required text-danger">*</span>
                       {% endif %}
                   </label>
-                  {# К полю ввода добавляем атрибут class #}
                   {{ field|addclass:'form-control' }} 
                     {% if field.help_text %}
                       <small 
@@ -44,14 +43,15 @@
                     {% endif %}
                 </div>
               {% endfor %}
-              <div class="col-md-6 offset-md-4">
-                <button type="submit" class="btn btn-primary">
-                  Зарегистрироваться
-                </button>
-              </div>
-            </form>
+                <div class="col-md-6 offset-md-4">
+                  <button type="submit" class="btn btn-primary">
+                    Зарегистрироваться
+                  </button>
+                </div>
+              </form>
           </div> <!-- card body -->
         </div> <!-- card -->
       </div> <!-- col -->
   </div> <!-- row -->
+</main>
 {% endblock %}
