@@ -1,3 +1,31 @@
-# hw05_final
 
-[![CI](https://github.com/yandex-praktikum/hw05_final/actions/workflows/python-app.yml/badge.svg?branch=master)](https://github.com/yandex-praktikum/hw05_final/actions/workflows/python-app.yml)
+# Проект YATUBE
+
+## Описание
+
+YATUBE является социальной сетью с возможностью публикации постов, по желанию автора, к посту можно прикрепить фото.
+Зарегистрированные пользователи могут оставлять комментарии к постам, а так же подписываться на посты интересных авторов.
+Пользователи без регистрации могут ознакомиься с последними постами всех авторов.
+
+## Установка и запуск
+
+    1. Создать виртуальное окружение
+        python -m venv venv
+
+    2. Активировать виртуальное окружение
+        source venv/bin/activate
+
+    3. Установить зависимости
+        pip install -r requirement.txt
+
+    4. Задать переменные окружения в .env-файле или другим способом 
+
+    5. Выполнить миграции
+        python manage.py makemigrations
+        python manage.py migrate
+
+    6. Запустить проект
+        python manage.py runserver 
+
+    7. Открыть в браузере по адресу http://127.0.0.1:8000 при запуске на локальной машине,
+        либо в соответствии с адресом вашего хоста.
